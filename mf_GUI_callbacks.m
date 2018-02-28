@@ -1,5 +1,5 @@
 function [ ] = mf_GUI_callbacks( to_do, opt1 )
-% v 9.2 2/18/2018 E R Louden
+% v 9.2 2/28/2018 E R Louden
 
 % This function contains the callbacks for the main MFF GUI window.
 % It can have up to 2 string inputs, to_do designates which callback to
@@ -12,9 +12,8 @@ function [ ] = mf_GUI_callbacks( to_do, opt1 )
 %       go
 %       plot_dropdown
 %       view_cycles
-%       save - doesn't appear to be called by mf_GUI_window .. move?
 
-% save & view params have their own functions
+% view params have their own functions - should this be moved?
 
 
 %% Initialize Global Variables
@@ -338,15 +337,7 @@ switch to_do
   
         
       %%%%  
-    case 'save_files'
-        %checks save file types from check boxes
-        mf_fitter.save.fig = get(mf_fitter.handles.figFile,'Value');
-        mf_fitter.save.jpg = get(mf_fitter.handles.jpgFile,'Value');
-        mf_fitter.save.eps = get(mf_fitter.handles.epsFile,'Value');
-        mf_fitter.save.pdf = get(mf_fitter.handles.pdfFile,'Value');
-    
-            
-            
+           
     case 'view_cycles'
         % checks & stores which cycles user wants to view
         mf_fitter.algorithm_options.cycle_view.view1 = get(mf_fitter.handles.window_modules.fit_cycles_4.view1,'Value');

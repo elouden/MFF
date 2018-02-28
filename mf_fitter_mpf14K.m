@@ -491,7 +491,7 @@ for n=1:mf_fitter.depth
     save = get(mf_fitter.handles.save,'Value');
     if(save & r == 2)
        numor = mf_fitter.fit_data.names(n); 
-       mf_fitter_save('save',['I vs Xi - ' num2str(numor)],fig_h(n));
+       mf_save('save',['I vs Xi - ' num2str(numor)],fig_h(n));
     end
     
 end    
@@ -521,7 +521,7 @@ end
 
         %% Make Colormap
             cm_han = CM(phi, Int, cyc);
-            mf_fitter_save('save','Colormap',cm_han)
+            mf_save('save','Colormap',cm_han)
 
         %% Peak Separation
             mf_fitter_callbacks('center_separation');
@@ -531,7 +531,7 @@ end
             plotData(cyc, y, y_err, 'Applied || AC Cycles', '\Delta \phi (degrees)', ['Peak Separation - ' mf_fitter.folder])
             set(gca,'xScale','log')
             
-            mf_fitter_save('save','PeakSeparation',ps_han)
+            mf_save('save','PeakSeparation',ps_han)
         
         
         %% Intensity
@@ -546,7 +546,7 @@ end
             legend('peak 1', 'peak 2')
             plot_template
             
-            mf_fitter_save('save','PeakIntensity',int_han)
+            mf_save('save','PeakIntensity',int_han)
             
             int_tot_han = figure
             errorbar(cyc,mf_fitter.fit_data.I_tot(:,1),mf_fitter.fit_data.I_tot(:,2),'ok')
@@ -559,14 +559,14 @@ end
             %legend('peak 1', 'peak 2')
             plot_template
             
-            mf_fitter_save('save','TotalIntensity',int_tot_han)
+            mf_save('save','TotalIntensity',int_tot_han)
         
         %% Angle Decay
             set(mf_fitter.handles.plot_dropdown,'Value',6) 
             mf_GUI_callbacks( 'plot_dropdown' )
             h = gcf; 
             
-            mf_fitter_save('save','AngleDecay',h)
+            mf_save('save','AngleDecay',h)
     else
     end
     

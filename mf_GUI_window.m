@@ -1,9 +1,9 @@
 function mf_GUI_window
+% v 9.2 2/18/2018 E R Louden
+
 % Draws main GUI for MFF, pretends to be Sector Window so grasp plays nice
-
-% v 8.0
-% 11/11/16 MFF Liz
-
+% Creates all the buttons and text boxes for various inputs
+% Uses mf_GUI_callbacks
 
 global grasp_env
 global grasp_handles
@@ -118,7 +118,7 @@ mf_fitter.handles.dphi_cutoff = uicontrol(handle,'units','normalized','Position'
 uicontrol('units','normalized','Position',[0.625 0.32 0.3 0.1],'FontName',grasp_env.font,'FontSize',grasp_env.fontsize,'Style','pushbutton','string','View Params', 'Callback', 'mf_fitter_table');
 
 % Experiment & Save Options
-uicontrol('units','normalized','Position',[0.625 0.2 0.2 0.1],'FontName',grasp_env.font,'FontSize',grasp_env.fontsize,'Style','pushbutton','tooltip','Click to enter the save folder information and applied cycles','string','Save Options','Callback','mf_fitter_save(''window'')');
+uicontrol('units','normalized','Position',[0.625 0.2 0.2 0.1],'FontName',grasp_env.font,'FontSize',grasp_env.fontsize,'Style','pushbutton','tooltip','Click to enter the save folder information and applied cycles','string','Save Options','Callback','mf_save(''window'')');
 uicontrol(handle,'units','normalized','Position',[0.84 0.26 0.35 0.05],'FontName',grasp_env.font,'FontSize',grasp_env.fontsize,'HorizontalAlignment','left','Style','text','String','Save?','BackgroundColor', grasp_env.background_color, 'ForegroundColor', [1 1 1]);
 mf_fitter.handles.save = uicontrol(handle,'units','normalized','Position',[0.85 0.215 0.048 0.05],'tooltip','Check if you want to auto save files based on the save options','FontName',grasp_env.font,'FontSize',grasp_env.fontsize,'Style','checkbox','HorizontalAlignment','right','Tag','angular_bin','Visible','on','Value', 0);
     
@@ -140,17 +140,7 @@ uicontrol('units','normalized','Position',[0.675 0.03 0.2 0.15],'FontName',grasp
 
 
  
-
-
-
-
-
-
-
-
-
-
-
+%% Code to interface with grasp
 
 %Garbage which is hidden, but kept to play nice with grasp_update
 %Anisotropy & Anisotropy angle

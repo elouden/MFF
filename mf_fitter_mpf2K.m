@@ -17,7 +17,7 @@ function [ ] = mf_fitter_mpf2K( )
 
 %% INITIALIZE 
 
-% global functions
+% global data structures
 global mf_fitter;
 global status_flags;
 global grasp_handles;
@@ -409,7 +409,7 @@ for n=1:mf_fitter.depth
 %     save = get(mf_fitter.handles.save,'Value')
 %     if(save)
 %        numor = mf_fitter.fit_data.names(n); 
-%        mf_fitter_save('save',['I vs Xi - ' num2str(numor)],fig_h(n)) 
+%        mf_save('save',['I vs Xi - ' num2str(numor)],fig_h(n)) 
 %     end
     
 end
@@ -484,7 +484,7 @@ for n=1:mf_fitter.depth
     save = get(mf_fitter.handles.save,'Value');
     if(save & r == 2)
        numor = mf_fitter.fit_data.names(n); 
-       mf_fitter_save('save',['I vs Xi - ' num2str(numor)],fig_h(n));
+       mf_save('save',['I vs Xi - ' num2str(numor)],fig_h(n));
     end
     
 end    
@@ -506,7 +506,7 @@ writetable(mf_fitter.handles.ExportTable, fileName);
         
         %% Make Colormap
             cm_han = CM(phi, Int, cyc);
-            mf_fitter_save('save','Colormap',cm_han)
+            mf_save('save','Colormap',cm_han)
 
             
         %% Peak Separation
@@ -517,7 +517,7 @@ writetable(mf_fitter.handles.ExportTable, fileName);
             plotData(cyc, y, y_err, 'Applied || AC Cycles', '\Delta \phi (degrees)', ['Peak Separation - ' mf_fitter.folder])
             set(gca,'xScale','log')
             
-            mf_fitter_save('save','PeakSeparation',ps_han)
+            mf_save('save','PeakSeparation',ps_han)
         
         
         %% Intensity
@@ -532,7 +532,7 @@ writetable(mf_fitter.handles.ExportTable, fileName);
             legend('peak 1', 'peak 2')
             plot_template
             
-            mf_fitter_save('save','PeakIntensity',int_han)
+            mf_save('save','PeakIntensity',int_han)
         
             
         %% Angle Decay
@@ -540,7 +540,7 @@ writetable(mf_fitter.handles.ExportTable, fileName);
             mf_GUI_callbacks( 'plot_dropdown' )
             h = gcf; 
             
-            mf_fitter_save('save','AngleDecay',h)
+            mf_save('save','AngleDecay',h)
             
             
     end

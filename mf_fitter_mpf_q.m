@@ -1,27 +1,32 @@
 function [ ] = mf_fitter_mpf_q( )   
-%   Fits the I vs Q      
+% v 9.2 2/28/2018 E R Louden    
 
-% v 9.2
-% 1/8/2017 MFF Liz
+% This function performs the actual fitting cycle.  This fitting algorithm
+% fits the intensity vs q (I vs Q) distributions.  The peaks aren't changing, so no
+% complicated fitting procedure is required.
+
 
 %%
 T = 14;
-offset = 272;
+offset = status_flags.analysis_modules.sectors.theta;
 %9.3G, 14K A peakpos1 = [-8.45187517700000;-7.68915335500000;-7.47352154800000;-6.87633342300000;-6.69900075100000;-6.37595843600000;-5.66311063200000;-5.26966137300000;-4.77753474300000;-4.57352948500000;-3.93995958600000;-3.24127178800000;-2.63441652700000;-2.08772010300000;-2.16719148300000;-2.29879820400000;-2.33026628200000];
 %9.3G, 14K A peakpos2 = [5.90762311800000;4.92568230300000;4.39117319500000;4.30777653900000;4.41996344500000;3.93916621700000;3.25245582100000;2.68130154000000;2.53264448400000;2.11011047600000;2.34221284000000;2.19088092000000;1.65485484800000;1.29943095100000;1.18069352600000;1.20828193600000;1.29487810600000];
 %9.3G, 14K B peakpos1 = [-6.26000000000000;-5.50000000000000;-3.85000000000000;-3.25000000000000;-1.52000000000000;-1.12000000000000]
 peakpos = [6.91000000000000;6.42000000000000;5.55000000000000;5.19000000000000;4.04000000000000;2.10000000000000];
 
-%% INITIALIZE global vars and function fitting
+%% INITIALIZE 
+
+% global data structures
 global mf_fitter;
 global status_flags;
 global grasp_handles;
 
-% determine number of files ('depth') for use elsewhere
-mf_fitter.depth = status_flags.selector.fdpth_max - 1;
+% BUG - initialize?
 
-
+% this should all be in the initialize - q callback
 % set the curve fit general parameters that are always the same
+
+% BUG - make it an option to choose Gaussian or IvsQ porod function
 status_flags.fitter.function_info_1d.name = 'Gaussian';
 status_flags.fitter.function_info_1d.variable_names = {'y0','i0', 'xc','fwhm'};
 status_flags.fitter.function_info_1d.long_names = {'Background','Integrated Intensity','Centre','FWHM'}
@@ -40,17 +45,15 @@ status_flags.fitter.function_info_1d.no_parameters = 4;
 status_flags.fitter.fn1d = 1;
 
 
-mf_fitter.exp = mf_fitter.folder;
-
-
 %% Perform the I vs Q fit
 
-for img_num = 1:mf_fitter.depth  
+for i = 1:mf_fitter.depth  
 
-    
-        % for 14 K change sector to make fitted peaks
+        % for 14 K change sector to match fitted peak positions
+        % BUG - make this a selectable option to have it change the peak
+        % position to match fitted centers from fit_data
         if(T == 14)
-            val = peakpos(img_num)+offset
+            val = peakpos(i)+offset
             set(grasp_handles.window_modules.sector.theta,'String',num2str(val))
             sector_callbacks2('theta');
         end
@@ -59,7 +62,7 @@ for img_num = 1:mf_fitter.depth
         
         % load desired depth file and update main grasp GUI
         % the +1 is necessary as file 1 represents a sum
-        status_flags.selector.fd = img_num+1;
+        status_flags.selector.fd = i+1;
         grasp_update;
 
         % plot I vs q and create the current figure, store handle
@@ -74,8 +77,7 @@ for img_num = 1:mf_fitter.depth
         %status_flags.fitter.function_info_1d.fix(3) = 1;
         %status_flags.fitter.function_info_1d.values(3) = 5;
         %grasp_update;
-       
-        
+             
         % turn off "fix" for power
         %status_flags.fitter.function_info_1d.fix(3) = 0;
         %grasp_update;
@@ -98,10 +100,10 @@ for img_num = 1:mf_fitter.depth
 %             mf_fitter.IvsQ_fit.center(img_num,j) = h(5);
 %             mf_fitter.IvsQ_fit.fwhm(img_num,j) = h(6);
 
-            mf_fitter.IvsQ_fit.background(img_num,j) = h(1);
-            mf_fitter.IvsQ_fit.intensity(img_num,j) = h(2);
-            mf_fitter.IvsQ_fit.center(img_num,j) = h(3);
-            mf_fitter.IvsQ_fit.fwhm(img_num,j) = h(4);
+            mf_fitter.fit_data.IvsQ_fit.background(i,j) = h(1);
+            mf_fitter.fit_data.IvsQ_fit.intensity(i,j) = h(2);
+            mf_fitter.fit_data.IvsQ_fit.center(i,j) = h(3);
+            mf_fitter.fit_data.IvsQ_fit.fwhm(i,j) = h(4);
 
         end
 
@@ -111,41 +113,39 @@ end
 %% Make a table to export the fit data
 
 % Import data to more clearly named files
-Numors = mf_fitter.fit_data.names;
-Background = mf_fitter.IvsQ_fit.background;
+Numors = mf_fitter.numors;
+Background = mf_fitter.fit_data.IvsQ_fit.background;
 %Mult = mf_fitter.IvsQ_fit.background;
 %Power = mf_fitter.IvsQ_fit.power;
-I = mf_fitter.IvsQ_fit.intensity;
-Q = mf_fitter.IvsQ_fit.center;
-FWHM = mf_fitter.IvsQ_fit.fwhm;
+I = mf_fitter.fit_data.IvsQ_fit.intensity;
+Q = mf_fitter.fit_data.IvsQ_fit.center;
+FWHM = mf_fitter.fit_data.IvsQ_fit.fwhm;
 
 % Get Cycles
-if(isempty(mf_fitter.fit_data.cycles))
-    Cycle = zeros(mf_fitter.depth,1); 
+if(isempty(mf_fitter.user_inputs.control_parameter))
+    ConParam = zeros(mf_fitter.depth,1); 
 else
-    cycSize = size(mf_fitter.fit_data.cycles);
+    cycSize = size(mf_fitter.user_inputs.control_parameter);
     if(cycSize(1) == 1)
-        Cycle = mf_fitter.fit_data.cycles';
+        ConParam = mf_fitter.user_inputs.control_parameter';
     else
-        Cycle = mf_fitter.fit_data.cycles;
+        ConParam = mf_fitter.user_inputs.control_parameter;
     end
 end
 
 % Titles at top of table
 %Titles = {'Numors', 'Cycles','Q','Q_err','y0','y0_err','m','m_err','n','n_err','I','I_err','FWHM','FWHM_err'};
- Titles = {'Numors', 'Cycles','Q','Q_err','y0','y0_err','I','I_err','FWHM','FWHM_err'};
+ Titles = {'Numors', 'Control Parameter','Q','Q_err','y0','y0_err','I','I_err','FWHM','FWHM_err'};
    
 % Concatenating all data
-DataTable = [Numors, Cycle, Q, Background, I, FWHM];
+DataTable = [Numors, ConParam, Q, Background, I, FWHM];
 DataCell = num2cell(DataTable);
 
-mf_fitter.handles.Export_IvsQ_Table = table(Numors, Cycle, Background, Q, I, FWHM);
+mf_fitter.handles.Export_IvsQ_Table = table(Numors, ConParam, Background, Q, I, FWHM);
     
-    % case 'data_storage'
-        % set the handle based on whether grabbing the values or the errors
        
 % mf_fitter_table;
 % fileName = [mf_fitter.extension mf_fitter.folder '_Buzz/' 'data.txt'];
 % writetable(mf_fitter.handles.ExportTable, fileName);
     
-
+end

@@ -2,7 +2,7 @@ function [ ] = mf_fitter_mpf2K( )
 % v 9.2 2/19/2018 E R Louden    
 
 % This function performs the actual fitting cycle.  This fitting algorithm
-% is ideal for the supercooled (2K) VL transition data.  While all pekas
+% is ideal for the supercooled (2K) VL transition data.  While all peaks
 % are fit, initial guess values and order of fitting  have been tailored
 % for when the ES peaks nucleate at their final orientations and grow.
 % This discontinuous transitions necessitates 3 Bragg peaks.
@@ -28,6 +28,9 @@ mf_fitter_NEWcallbacks('initialize');
 
 % number of fitting cycles
 mf_fitter.algorithm_options.total_cycles = 6;
+mf_fitter.algorithm_options.fitter = {'G','M','M','M','M','M'};
+mf_fitter.algorithm_options.fitter_cycle = [];
+
 
 % wait_position = [0.85 .2 .25 .08];
 % refit_check = 1;
@@ -46,6 +49,7 @@ view5 = mf_fitter.algorithm_options.cycle_view.view5;
 
 mf_fitter.algorithm_options.current_cycle = 'cycle1';
 notification = msgbox('Fitting reference peaks...');
+mf_fitter.algorithm_options.fitter_cycle = 1;
 
 %Checks to see if both successfully found
 if isempty(mf_fitter.user_inputs.reference_files.one)
@@ -106,27 +110,34 @@ end
 
 fig_h = [];
 
-%% Second Fitting Cycle
-% Fix centers & fwhm, determine intensities
 
-mf_fitter.algorithm_options.current_cycle = 'cycle2';
-curCycName = 'cycle2';
-prevCycName = 'cycle1';
+%% Load Smoothed Data
+% for use in every fitting cycle
 
 phi = mf_fitter.data.smoothed.phi; 
 Int = mf_fitter.data.smoothed.Int;
 Int_err = mf_fitter.data.smoothed.Int_err;
 
-% Fixed Values - grab from reference files
+
+%% Second Fitting Cycle
+% Fix centers & fwhm, determine intensities
+
+mf_fitter.algorithm_options.current_cycle = 'cycle2';
+mf_fitter.alogirthm_options.fitter_cycles = 2;
+curCycName = 'cycle2';
+prevCycName = 'cycle1';
+
+% Grab fit data from reference files
 ref1 = find(mf_fitter.numors == mf_fitter.user_inputs.reference_files.one);
 ref2 = find(mf_fitter.numors == mf_fitter.user_inputs.reference_files.two);
 
+% Fixed Values 
 FWHM = (mf_fitter.fit_data.(prevCycName).fwhm(ref1)+mf_fitter.fit_data.(prevCycName).fwhm(ref2))/2;
 XC1 = mf_fitter.fit_data.(prevCycName).center1(ref2) - status_flags.analysis_modules.sectors.theta;
 XC2 = mf_fitter.fit_data.(prevCycName).center2(ref1) - status_flags.analysis_modules.sectors.theta;
 XC3 = mf_fitter.fit_data.(prevCycName).center3(ref2) - status_flags.analysis_modules.sectors.theta;
 
-% Guess values (remember data has been smoothed & centered)
+% Guess Values (remember data has been smoothed & centered)
 Y0 = (mf_fitter.fit_data.(prevCycName).background(ref1)+mf_fitter.fit_data.(prevCycName).background(ref2))/2;  % GRASP does one y0 per guassian peak
 I01 = mf_fitter.fit_data.(prevCycName).intensity1(ref2);
 I02 = mf_fitter.fit_data.(prevCycName).intensity2(ref1);
@@ -162,19 +173,22 @@ else close(fig_h)
 end
 fig_h = [];
     
-    
+% Verify fits - BUG
+mf_fitter_NEWcallbacks('FitCheck')
+try
+    close(mf_fitter.handles.table) 
+end 
+
+
 %% Third Fitting Cycle
 % Fix intensiites & fwhm, determine centers 
 % no values from GRASP, no other corrections necessary
 % values change with file number
 
 mf_fitter.algorithm_options.current_cycle = 'cycle3';
+mf_fitter.alogirthm_options.fitter_cycles = 3;
 curCycName = 'cycle3';
 prevCycName = 'cycle2';
-
-phi = mf_fitter.data.smoothed.phi; 
-Int = mf_fitter.data.smoothed.Int;
-Int_err = mf_fitter.data.smoothed.Int_err;
 
 for n=1:mf_fitter.depth
     
@@ -218,6 +232,11 @@ else close(fig_h)
 end
 fig_h = [];
 
+% Verify fits - BUG
+mf_fitter_NEWcallbacks('FitCheck')
+try
+    close(mf_fitter.handles.table) 
+end
 
 %% Fourth Fitting Cycle
 % Fix centers, intensities free, determine fwhm 
@@ -226,12 +245,10 @@ fig_h = [];
 % values change with file number
 
 mf_fitter.algorithm_options.current_cycle = 'cycle4';
+mf_fitter.alogirthm_options.fitter_cycles = 4;
 curCycName = 'cycle4';
 prevCycName = 'cycle3';
 
-phi = mf_fitter.data.smoothed.phi; 
-Int = mf_fitter.data.smoothed.Int;
-Int_err = mf_fitter.data.smoothed.Int_err;
 
 % BUG
 % for extracting covariances when all data must be fit
@@ -264,16 +281,16 @@ for n = 1:mf_fitter.depth
     % [F3 CI3 fig_h(n)] = matlabFit(phi, Int(N(n),:), Int_err(N(n),:),{},{},[FWHM, FWHM, FWHM, I01, I02, I03, XC1, XC2, XC3, Y0], [0.4*FWHM, 0.4*FWHM, 0.4*FWHM, 0.4*I01, 0.4*I02, 0.4*I03, XC1-3, XC2-0.5, XC3-3, -Inf], [1.6*FWHM, 1.6*FWHM, 1.6*FWHM, 1.6*I01, 1.6*I02, 1.6*I03, XC1+3, XC2+0.5, XC3+3, Inf], 2)    
     
     % fwhm, intensities, and background free
-    mf_fitter.fit_data.fwhm(n,1) = F3.fwhm;
-    mf_fitter.fit_data.fwhm(n,2) = CI3(2,1) - F3.fwhm;
-    mf_fitter.fit_data.intensity1(n,1) = F3.i01;
-	mf_fitter.fit_data.intensity1(n,2) = CI3(2,2) - F3.i01;
-	mf_fitter.fit_data.intensity2(n,1) = F3.i02;
-    mf_fitter.fit_data.intensity2(n,2) = CI3(2,3) - F3.i02;
-    mf_fitter.fit_data.intensity3(n,1) = F3.i03;
-    mf_fitter.fit_data.intensity3(n,2) = CI3(2,4) - F3.i03;
-    mf_fitter.fit_data.background(n,1) = F3.y0;
-    mf_fitter.fit_data.background(n,2) = CI3(2,5) - F3.y0;
+    mf_fitter.fit_data.(curCycName).fwhm(n,1) = F3.fwhm;
+    mf_fitter.fit_data.(curCycName).fwhm(n,2) = CI3(2,1) - F3.fwhm;
+    mf_fitter.fit_data.(curCycName).intensity1(n,1) = F3.i01;
+	mf_fitter.fit_data.(curCycName).intensity1(n,2) = CI3(2,2) - F3.i01;
+	mf_fitter.fit_data.(curCycName).intensity2(n,1) = F3.i02;
+    mf_fitter.fit_data.(curCycName).intensity2(n,2) = CI3(2,3) - F3.i02;
+    mf_fitter.fit_data.(curCycName).intensity3(n,1) = F3.i03;
+    mf_fitter.fit_data.(curCycName).intensity3(n,2) = CI3(2,4) - F3.i03;
+    mf_fitter.fit_data.(curCycName).background(n,1) = F3.y0;
+    mf_fitter.fit_data.(curCycName).background(n,2) = CI3(2,5) - F3.y0;
     
     % centers fixed, error should stay 0
     mf_fitter.fit_data.(curCycName).center1(n,1) = XC1;
@@ -323,6 +340,12 @@ else close(fig_h)
 end
 fig_h = [];
 
+% Verify fits
+mf_fitter_NEWcallbacks('FitCheck')   
+try
+    close(mf_fitter.handles.table) 
+end  
+   
     
 %% Fifth Fitting Cycle
 % Double Check centers with new fwhm
@@ -330,13 +353,9 @@ fig_h = [];
 % values change with file number
 
 mf_fitter.algorithm_options.current_cycle = 'cycle5';
+mf_fitter.alogirthm_options.fitter_cycles = 5;
 curCycName = 'cycle5';
 prevCycName = 'cycle4';
-
-phi = mf_fitter.data.smoothed.phi; 
-Int = mf_fitter.data.smoothed.Int;
-Int_err = mf_fitter.data.smoothed.Int_err;
-
 
 % Fixed Values
 % BUG - later add code to descriminate against outliers
@@ -344,8 +363,8 @@ Int_err = mf_fitter.data.smoothed.Int_err;
 % determine fms to see which peaks meet the intensity criteria
 fms = mf_fitter.fit_data.(prevCycName).intensity2(:,1) ./ (mf_fitter.fit_data.(prevCycName).intensity1(:,1) + mf_fitter.fit_data.(prevCycName).intensity2(:,1) + mf_fitter.fit_data.(prevCycName).intensity3(:,1));
 
-% fms must be greater than intcutoff (MS peak meets critera)
-% fms must be less than 1 - 2*intcutoff (ES peaks meet criteria)
+% fms must be greater than int_cutoff (MS peak meets critera)
+% fms must be less than 1 - 2*int_cutoff (ES peaks meet criteria)
 int_cutoff = mf_fitter.user_inputs.int_cutoff;
 FWHM = mean(mf_fitter.fit_data.(prevCycName).fwhm(find(fms > int_cutoff & fms < (1-2*int_cutoff)),:));
 FWHM(2) = std(mf_fitter.fit_data.(prevCycName).fwhm(find(fms > int_cutoff & fms < (1-2*int_cutoff)),:));
@@ -395,23 +414,26 @@ for n=1:mf_fitter.depth
     
 end
 
-    
-    if(view5) 
-    else close(fig_h) 
-    end
-    fig_h = [];
+% unless user wants to view full cycle, close figures
+if(view4) 
+else close(fig_h) 
+end
+fig_h = [];
+
+% Verify fits
+mf_fitter_NEWcallbacks('FitCheck')   
+try
+    close(mf_fitter.handles.table) 
+end  
 
 %% Sixth Fitting Cycle
 % Final fit
 % values change with file number
 
 mf_fitter.algorithm_options.current_cycle = 'cycle6';
+mf_fitter.alogirthm_options.fitter_cycles = 6;
 curCycName = 'cycle6';
 prevCycName = 'cycle5';
-
-phi = mf_fitter.data.smoothed.phi; 
-Int = mf_fitter.data.smoothed.Int;
-Int_err = mf_fitter.data.smoothed.Int_err;
 
 for r = 1:2
 for n=1:mf_fitter.depth

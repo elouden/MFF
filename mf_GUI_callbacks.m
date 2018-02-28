@@ -174,7 +174,7 @@ switch to_do
                 % 14K Peaks Rotate
                 elseif( get(mf_fitter.handles.fit_dropdown,'Value') == 4 )
                     disp('MS peaks rotate in to final position - fits 2 peaks')
-                    mf_fitter_mpf3();
+                    mf_fitter_mpf14K();
 
                 % Raster Scan
                 elseif( get(mf_fitter.handles.fit_dropdown,'Value') == 5 )

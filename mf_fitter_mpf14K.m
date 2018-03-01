@@ -27,9 +27,11 @@ global grasp_handles;
 %mf_fitter_callbacks('initialize');
 mf_fitter_NEWcallbacks('initialize');
 
-%mf_fitter.fitter.type = {'G','M','M','M','M','M'};
+mf_fitter.algorithm_options.total_cycles = 6;
 mf_fitter.algorithm_options.fitter_type = {'G','M','M','M','M','M'};
 mf_fitter.algorithm_options.fitter_cycle = [];
+mf_fitter.algorithm_options.num_peaks = 2;
+mf_fitter.algorithm_options.algorithm_name = '14K';
 
 
 %% Check which Fitting Cycles are to be viewed
@@ -43,7 +45,7 @@ view5 = mf_fitter.algorithm_options.cycle_view.view5;
 %% Reference Files - Cycle 1
 % For simplicity, fit reference peaks in GRASP 
 
-mf_fitter.algorith_options.current_cycle = 'cycle1';
+mf_fitter.algorithm_options.current_cycle = 'cycle1';
 notification = msgbox('Fitting reference peaks...');
 mf_fitter.algorithm_options.fitter_cycle = 1;
 
@@ -114,7 +116,7 @@ Int_err = mf_fitter.data.smoothed.Int_err;
 % Fix intensities & fwhm, determine centers
 
 mf_fitter.algorithm_options.current_cycle = 'cycle2';
-mf_fitter.alogirthm_options.fitter_cycles = 2;
+mf_fitter.algorithm_options.fitter_cycles = 2;
 curCycName = 'cycle2';
 prevCycName = 'cycle1';
 
@@ -146,7 +148,7 @@ for n=1:mf_fitter.depth
     
     % order: y0, fwhm, i01, xc1, i02, xc2, i03, xc3
     % matlabFit(phi, int, interr, problemVarNames, problemVarValues, start, lower, upper)
-    [F1 CI1 fig_h(n)] = matlabFit(phi, Int(n,:), Int_err(n,:), {'fwhm','i01', 'i02', 'xc2', 'i03'}, {FWHM, I01, I02, XC2, I03}, [XC1, XC3, Y0], [-15, 0, 0], [0, 15, 5*Y0]);
+    [F1 CI1 fig_h(n) chi2] = matlabFit(phi, Int(n,:), Int_err(n,:), {'fwhm','i01', 'i02', 'xc2', 'i03'}, {FWHM, I01, I02, XC2, I03}, [XC1, XC3, Y0], [-15, 0, 0], [0, 15, 5*Y0]);
          
     % centers and background free
     mf_fitter.fit_data.(curCycName).background(n,1) = F1.y0;
@@ -162,6 +164,9 @@ for n=1:mf_fitter.depth
     mf_fitter.fit_data.(curCycName).intensity2(n,1) = I02;
     mf_fitter.fit_data.(curCycName).intensity3(n,1) = I03;
     mf_fitter.fit_data.(curCycName).center2(n,1) = XC2;
+    
+    % chi2
+    mf_fitter.fit_data.(curCycName).chi2(n) = chi2;
 
     
 end
@@ -185,7 +190,7 @@ end
 % values change with file number
 
 mf_fitter.algorithm_options.current_cycle = 'cycle3';
-mf_fitter.alogirthm_options.fitter_cycles = 3;
+mf_fitter.algorithm_options.fitter_cycles = 3;
 curCycName = 'cycle3';
 prevCycName = 'cycle2';
 
@@ -205,7 +210,7 @@ for n=1:mf_fitter.depth
 
     % order: y0, fwhm, i01, xc1, i02, xc2, i03, xc3
     % matlabFit(phi, int, interr, problemVarNames, problemVarValues, start, lower, upper)
-    [F2 CI2 fig_h(n)] = matlabFit(phi, Int(n,:), Int_err(n,:), { 'fwhm', 'xc1', 'i02', 'xc2', 'xc3'}, {FWHM, XC1, I02, XC2, XC3}, [I01, I03, Y0], 0.25*[I01, I03, 0], 2*[I01, I03, (5/2)*Y0])    
+    [F2 CI2 fig_h(n) chi2] = matlabFit(phi, Int(n,:), Int_err(n,:), { 'fwhm', 'xc1', 'i02', 'xc2', 'xc3'}, {FWHM, XC1, I02, XC2, XC3}, [I01, I03, Y0], 0.25*[I01, I03, 0], 2*[I01, I03, (5/2)*Y0])    
          
     % intensities and background free
     mf_fitter.fit_data.(curCycName).background(n,1) = F2.y0;
@@ -221,6 +226,9 @@ for n=1:mf_fitter.depth
     mf_fitter.fit_data.(curCycName).center3(n,1) = XC3; 
     mf_fitter.fit_data.(curCycName).center2(n,1) = XC2;
     mf_fitter.fit_data.(curCycName).intensity2(n,1) = I02;
+    
+    % chi2
+    mf_fitter.fit_data.(curCycName).chi2(n) = chi2;
 
 end
 
@@ -243,7 +251,7 @@ end
 % values change with file number
 
 mf_fitter.algorithm_options.current_cycle = 'cycle4';
-mf_fitter.alogirthm_options.fitter_cycles = 4;
+mf_fitter.algorithm_options.fitter_cycles = 4;
 curCycName = 'cycle4';
 prevCycName = 'cycle3';
 
@@ -273,7 +281,7 @@ for n = 1:mf_fitter.depth
     % matlabFit(phi, int, interr, problemVarNames, problemVarValues, start, lower, upper)
     
     % original fit with centers fixed, for final algorithm
-    [F3 CI3 fig_h(n)] = matlabFit(phi, Int(N(n),:), Int_err(N(n),:), { 'xc1', 'i02', 'xc2', 'xc3'}, {XC1, I02, XC2, XC3}, [FWHM, I01, I03, Y0], 0.4*[FWHM, I01, I03, Y0], 1.6*[FWHM, I01, I03, Y0])    
+    [F3 CI3 fig_h(n) chi2] = matlabFit(phi, Int(N(n),:), Int_err(N(n),:), { 'xc1', 'i02', 'xc2', 'xc3'}, {XC1, I02, XC2, XC3}, [FWHM, I01, I03, Y0], 0.4*[FWHM, I01, I03, Y0], 1.6*[FWHM, I01, I03, Y0])    
      
     %uncomment for convariance -  do not fix xc1 and xc3, just give initial values
     % [F3 CI3 fig_h(n)] = matlabFit(phi, Int(N(n),:), Int_err(N(n),:), { 'i02', 'xc2'}, {I02, XC2}, [FWHM, I01, I03, XC1, XC2, Y0], [0.4*FWHM, 0.4*I01, 0.4*I03, XC1-3, XC3-3, 0.4*Y0], [1.6*FWHM, 1.6*I01, 1.6*I03, XC1+3, XC3+3, 1.6*Y0])    
@@ -307,6 +315,10 @@ for n = 1:mf_fitter.depth
     % comment when extracting covariance/open fits
     mf_fitter.fit_data.(curCycName).background(n,1) = F3.y0; 
     mf_fitter.fit_data.(curCycName).background(n,2) = CI3(2,4) - F3.y0;
+    
+    % chi2
+    mf_fitter.fit_data.(curCycName).chi2(n) = chi2;
+    
 %     mf_fitter.fit_data.fwhm(n,1) = F3.fwhm;
 
 %     %uncomment for open fit
@@ -348,7 +360,7 @@ end
 % values change with file number
 
 mf_fitter.algorithm_options.current_cycle = 'cycle5';
-mf_fitter.alogirthm_options.fitter_cycles = 5;
+mf_fitter.algorithm_options.fitter_cycles = 5;
 curCycName = 'cycle5';
 prevCycName = 'cycle4';
 
@@ -383,7 +395,7 @@ for n=1:mf_fitter.depth
      % ORDER
      % i1, itot,  xc1, xc3, y0
      %matlabFit(phi, int, interr, problemVarNames, problemVarValues, start, lower, upper, opt)
-    [F4 CI4 fig_h(n)] = matlabFit(phi, Int(n,:), Int_err(n,:), {'fwhm'}, {FWHM(1)}, [I1, ITOT, XC1, XC3, Y0], [ 0.75*I1, 0.8*ITOT, 1.5*XC1, 0.5*XC3, 0.5*Y0], [1.25*I1, 1.5*ITOT, 0.5*XC1, 1.5*XC3, 1.5*Y0], 1)    %xc1 is neg, lower bound needs to be more neg
+    [F4 CI4 fig_h(n) chi2] = matlabFit(phi, Int(n,:), Int_err(n,:), {'fwhm'}, {FWHM(1)}, [I1, ITOT, XC1, XC3, Y0], [ 0.75*I1, 0.8*ITOT, 1.5*XC1, 0.5*XC3, 0.5*Y0], [1.25*I1, 1.5*ITOT, 0.5*XC1, 1.5*XC3, 1.5*Y0], 1)    %xc1 is neg, lower bound needs to be more neg
              
      % intensities, background, and centers were free
      mf_fitter.fit_data.(curCycName).background(n,1) = F4.y0;
@@ -414,6 +426,9 @@ for n=1:mf_fitter.depth
      % FWHM was fixed
      mf_fitter.fit_data.(curCycName).fwhm(n,1) = FWHM(1);
      mf_fitter.fit_data.(curCycName).fwhm(n,2) = FWHM(2);
+     
+     % chi2
+    mf_fitter.fit_data.(curCycName).chi2(n) = chi2;
 
 end
 
@@ -435,7 +450,7 @@ end
 % values change with file number
 
 mf_fitter.algorithm_options.current_cycle = 'cycle6';
-mf_fitter.alogirthm_options.fitter_cycles = 6;
+mf_fitter.algorithm_options.fitter_cycles = 6;
 curCycName = 'cycle6';
 prevCycName = 'cycle5';
 
@@ -456,7 +471,7 @@ for n=1:mf_fitter.depth
      % ORDER
      % i1, itot,  xc1, xc3, y0
      %matlabFit(phi, int, interr, problemVarNames, problemVarValues, start, lower, upper, opt)
-     [F5 CI5 fig_h(n)] = matlabFit(phi, Int(n,:), Int_err(n,:), {'fwhm'}, {FWHM(1)}, [I1, ITOT, XC1, XC3, Y0], [ 0.75*I1, 0.75*ITOT, 1.5*XC1, 0.5*XC3, 0.5*Y0], [1.25*I1, 1.5*ITOT, 0.5*XC1, 1.5*XC3, 1.5*Y0], 1)    %xc1 is neg, lower bound needs to be more neg
+     [F5 CI5 fig_h(n) chi2] = matlabFit(phi, Int(n,:), Int_err(n,:), {'fwhm'}, {FWHM(1)}, [I1, ITOT, XC1, XC3, Y0], [ 0.75*I1, 0.75*ITOT, 1.5*XC1, 0.5*XC3, 0.5*Y0], [1.25*I1, 1.5*ITOT, 0.5*XC1, 1.5*XC3, 1.5*Y0], 1)    %xc1 is neg, lower bound needs to be more neg
          
      mf_fitter.fit_data.(curCycName).background(n,1) = F5.y0;
      mf_fitter.fit_data.(curCycName).background(n,2) = CI5(2,5) - F5.y0;
@@ -483,7 +498,9 @@ for n=1:mf_fitter.depth
      mf_fitter.fit_data.(curCycName).intensity3(n,1) = itot*(1-i1);
      mf_fitter.fit_data.(curCycName).intensity3(n,2) = sqrt(((1-i1)*itot_err)^2+(itot*(-1)*i1_err)^2);
 
-    
+    % chi2
+    mf_fitter.fit_data.(curCycName).chi2(n) = chi2;
+     
     if(r == 1)
         close(fig_h(n))
     end

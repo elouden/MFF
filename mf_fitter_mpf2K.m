@@ -173,9 +173,13 @@ for n=1:mf_fitter.depth
     
     % centers and FWHM fixed, error should stay 0
     mf_fitter.fit_data.(curCycName).center1(n,1) = XC1;
+    mf_fitter.fit_data.(curCycName).center1(n,2) = 0;
     mf_fitter.fit_data.(curCycName).center2(n,1) = XC2;
-    mf_fitter.fit_data.(curCycName).center3(n,1) = XC3; 
+    mf_fitter.fit_data.(curCycName).center2(n,2) = 0;
+    mf_fitter.fit_data.(curCycName).center3(n,1) = XC3;
+    mf_fitter.fit_data.(curCycName).center3(n,2) = 0;
     mf_fitter.fit_data.(curCycName).fwhm(n,1) = FWHM;
+    mf_fitter.fit_data.(curCycName).fwhm(n,2) = 0;
     
     % chi2
     mf_fitter.fit_data.(curCycName).chi2(n) = chi2;
@@ -239,9 +243,13 @@ for n=1:mf_fitter.depth
     
     % intensities and FWHM fixed, error should stay 0
     mf_fitter.fit_data.(curCycName).fwhm(n,1) = FWHM;
+    mf_fitter.fit_data.(curCycName).fwhm(n,2) = 0;
     mf_fitter.fit_data.(curCycName).intensity1(n,1) = I01;
+    mf_fitter.fit_data.(curCycName).intensity1(n,2) = 0;
     mf_fitter.fit_data.(curCycName).intensity2(n,1) = I02;
-    mf_fitter.fit_data.intensity3(n,1) = I03;
+    mf_fitter.fit_data.(curCycName).intensity1(n,2) = 0;
+    mf_fitter.fit_data.(curCycName).intensity3(n,1) = I03;
+    mf_fitter.fit_data.(curCycName).intensity3(n,2) = 0;
     
     % chi2
     mf_fitter.fit_data.(curCycName).chi2(n) = chi2;
@@ -316,8 +324,11 @@ for n = 1:mf_fitter.depth
     
     % centers fixed, error should stay 0
     mf_fitter.fit_data.(curCycName).center1(n,1) = XC1;
+    mf_fitter.fit_data.(curCycName).center1(n,2) = 0;
     mf_fitter.fit_data.(curCycName).center2(n,1) = XC2;
+    mf_fitter.fit_data.(curCycName).center2(n,2) = 0;
     mf_fitter.fit_data.(curCycName).center3(n,1) = XC3;
+    mf_fitter.fit_data.(curCycName).center3(n,2) = 0;
     
      % uncomment when extracting covariance
 %      mf_fitter.fit_data.center1(n,1) = F3.xc1;
@@ -428,7 +439,9 @@ for n=1:mf_fitter.depth
     mf_fitter.fit_data.(curCycName).fwhm(n,1) = FWHM(1);
     mf_fitter.fit_data.(curCycName).fwhm(n,2) = FWHM(2);
     mf_fitter.fit_data.(curCycName).intensity2(n,1) = I02;
+    mf_fitter.fit_data.(curCycName).intensity2(n,2) = 0;
     mf_fitter.fit_data.(curCycName).center2(n,1) = XC2;
+    mf_fitter.fit_data.(curCycName).center2(n,2) = 0;
     
     % chi2
     mf_fitter.fit_data.(curCycName).chi2(n) = chi2;

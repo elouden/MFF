@@ -3,11 +3,12 @@ function [] = plot_template( scale )
 
 % This function sets all of the preferred options for formatting plots for publications
 % It should be called when the current figure is essentially complete and still the "active" figure
-% Note:  it turns "hold" off, so if you have a plot command immediately following plot_template, it will overwrite your figure!
+% Note:  it turns "hold" off, so if you have a plot command immediately following plot_template, 
+% it will overwrite your figure!
 
 % The scale changes how large the figure is:
 %   for publication: scale = 1
-%   for visualization during analysis: scale = 2 (it is easier to ee what you are doing!!)
+%   for visualization during analysis: scale = 2 (it is easier to see what you are doing!!)
 
 % The current preferences are:
 %   Aspect Ratio/Size - 5.7 cm x 4.45 cm
@@ -63,3 +64,4 @@ hold off
 
 % Remove internal variables
 clear h_title h_xlabel h_ylabel fig_size fig_position position f
+end
